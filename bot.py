@@ -1,7 +1,11 @@
+import os
+import sys
+# Force unbuffered output for Render logs
+sys.stdout = sys.stdout
+os.environ['PYTHONUNBUFFERED'] = '1'
 import asyncio
 import aiohttp
 import aiosqlite
-import os
 import re
 import time
 import logging
