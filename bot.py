@@ -1066,6 +1066,27 @@ async def cmd_stats(m: Message):
         f"Poll interval: {POLL_SECONDS}s"
     )
 
+class RateLimiter:
+    """Simple rate limiter for API calls"""
+    def __init__(self, calls_per_second: float = 5):
+        self.min_interval = 1.0 / calls_per_second
+        self.last_call = 0
+        self.lock = asyncio.Lock()
+    
+    async def acquire(self):
+        async with self.lock:
+            now = time.time()
+            time_since_last = now - self.last_call
+            
+            if time_since_last < self.min_interval:
+                sleep_time = self.min_interval - time_since_last
+                await asyncio.sleep(sleep_time)
+            
+            self.last_call = time.time()
+
+# Create limiter instance
+etherscan_limiter = RateLimiter(calls_per_second=4)  # 4 calls per second
+
 # ===================================================== 
 # NETWORK CHECKERS
 # ===================================================== 
