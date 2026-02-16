@@ -2,7 +2,6 @@ services:
   - type: worker
     name: crypto-wallet-monitor
     env: python
-    runtime: python-3.11.9
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
     envVars:
