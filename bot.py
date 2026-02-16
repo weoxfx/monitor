@@ -43,18 +43,23 @@ logger = logging.getLogger(__name__)
 # ===================================================== 
 TOKEN = os.getenv("CTOKEN")
 if not TOKEN:
-    raise ValueError("CTOKEN environment variable not set")
+    raise ValueError("❌ CTOKEN environment variable not set")
 
-ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY")
-SOLSCAN_API_KEY = os.getenv("SOLSCAN_API_KEY")
+ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY", "")
+SOLSCAN_API_KEY = os.getenv("SOLSCAN_API_KEY", "")
 
 if not ETHERSCAN_API_KEY:
-    logger.warning("⚠️ ETHERSCAN_API_KEY not set - EVM networks will be disabled")
+    print("⚠️ ETHERSCAN_API_KEY not set - EVM networks will be disabled")
 if not SOLSCAN_API_KEY:
-    logger.warning("⚠️ SOLSCAN_API_KEY not set - Solana will be disabled")
+    print("⚠️ SOLSCAN_API_KEY not set - Solana will be disabled")
 
-DB = "wallets.db"
-POLL_SECONDS = 10
+# Use environment variable for DB path (Render persistent disk)
+DB = os.getenv("DB_PATH", "/opt/render/project/.data/wallets.db")
+
+# Create directory if it doesn't exist
+os.makedirs(os.path.dirname(DB), exist_ok=True)
+
+POLL_SECONDS = int(os.getenv("POLL_SECONDS", "10"))
 PRICE_CACHE_DURATION = 60
 MAX_RETRIES = 3
 REQUEST_TIMEOUT = 15
