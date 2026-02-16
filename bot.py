@@ -1314,6 +1314,11 @@ async def monitor_loop():
 # ===================================================== 
 # MAIN
 # ===================================================== 
+# At line where you call setup_wallet_groups (around line 1100), replace with:
+
+# CORRECT integration:
+from wallet_groups import setup_wallet_groups
+
 async def main():
     global session
     
@@ -1334,7 +1339,19 @@ async def main():
     connector = aiohttp.TCPConnector(limit=100, limit_per_host=30)
     session = aiohttp.ClientSession(connector=connector)
     logger.info("✅ HTTP session created")
-    setup_wallet_groups(dp, DB, ETHERSCAN_API_KEY, SOLSCAN_API_KEY, session, ALL_NETWORKS)
+    
+    # ✨ WALLET GROUPS INTEGRATION ✨
+    setup_wallet_groups(
+        dp=dp,
+        db_path=DB,
+        etherscan_key=ETHERSCAN_API_KEY,
+        solscan_key=SOLSCAN_API_KEY,
+        session=session,
+        all_networks=ALL_NETWORKS,
+        etherscan_networks=ETHERSCAN_NETWORKS,
+        get_native_symbol_func=get_native_symbol
+    )
+    
     monitor_task = asyncio.create_task(monitor_loop())
     logger.info("✅ Monitor loop started")
     
