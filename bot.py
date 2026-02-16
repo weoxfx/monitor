@@ -1078,6 +1078,7 @@ async def check_evm_unified(address: str, last_tx: str, net_key: str) -> List[Tu
     native_symbol = ETHERSCAN_NETWORKS[net_key][2]
     
     new_txs = []
+    seen_hashes = set()  # ✨ PREVENT DUPLICATES
     
     # Native txs
     native_url = (
@@ -1098,13 +1099,21 @@ async def check_evm_unified(address: str, last_tx: str, net_key: str) -> List[Tu
     
     if native_js and native_js.get("status") == "1":
         for tx in native_js.get("result", []):
-            if tx["hash"] == last_tx:
+            tx_hash = tx.get("hash", "")
+            
+            # ✨ STOP when we reach the last known transaction
+            if tx_hash == last_tx:
                 break
+            
+            # ✨ Skip if already seen (prevents duplicates)
+            if tx_hash in seen_hashes:
+                continue
             
             if tx.get("to", "").lower() == address.lower():
                 value = int(tx.get("value", 0)) / 1e18
                 if value > 0:
-                    new_txs.append((tx["hash"], native_symbol, value))
+                    new_txs.append((tx_hash, native_symbol, value))
+                    seen_hashes.add(tx_hash)  # ✨ MARK AS SEEN
     
     # Token txs (ERC-20)
     token_url = (
@@ -1123,8 +1132,15 @@ async def check_evm_unified(address: str, last_tx: str, net_key: str) -> List[Tu
     
     if token_js and token_js.get("status") == "1":
         for tx in token_js.get("result", []):
-            if tx["hash"] == last_tx:
+            tx_hash = tx.get("hash", "")
+            
+            # ✨ STOP when we reach the last known transaction
+            if tx_hash == last_tx:
                 break
+            
+            # ✨ Skip if already seen (prevents duplicates)
+            if tx_hash in seen_hashes:
+                continue
             
             if tx.get("to", "").lower() == address.lower():
                 decimals = int(tx.get("tokenDecimal", 18))
@@ -1132,7 +1148,8 @@ async def check_evm_unified(address: str, last_tx: str, net_key: str) -> List[Tu
                 symbol = tx.get("tokenSymbol", "TOKEN")
                 
                 if value > 0:
-                    new_txs.append((tx["hash"], symbol, value))
+                    new_txs.append((tx_hash, symbol, value))
+                    seen_hashes.add(tx_hash)  # ✨ MARK AS SEEN
     
     return new_txs
 
