@@ -366,6 +366,10 @@ def validate_address(address: str, net_key: str) -> bool:
     return False
 
 async def fetch_with_retry(url: str, headers: Optional[dict] = None, max_retries: int = MAX_RETRIES) -> Optional[dict]:
+    # ✨ RATE LIMIT ETHERSCAN CALLS
+    if "etherscan.io" in url:
+        await etherscan_limiter.acquire()
+    
     for attempt in range(max_retries):
         try:
             timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT)
