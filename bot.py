@@ -27,7 +27,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from wallet_groups import setup_wallet_groups
 
-load_dotenv()
 
 # ===================================================== 
 # LOGGING
