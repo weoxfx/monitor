@@ -229,8 +229,45 @@ async def init_db():
         await db.execute("""
             CREATE INDEX IF NOT EXISTS idx_user_wallets ON wallets(user_id)
         """)
+        
+        # ✨ NEW: Track processed transactions
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS processed_txs(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                wallet_id INTEGER NOT NULL,
+                tx_hash TEXT NOT NULL,
+                processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(wallet_id, tx_hash),
+                FOREIGN KEY(wallet_id) REFERENCES wallets(id) ON DELETE CASCADE
+            )
+        """)
+        await db.execute("""
+            CREATE INDEX IF NOT EXISTS idx_processed_txs ON processed_txs(wallet_id, tx_hash)
+        """)
+        
         await db.commit()
     logger.info("✅ Database initialized")
+
+async def is_tx_processed(wallet_id: int, tx_hash: str) -> bool:
+    """Check if transaction was already processed"""
+    async with aiosqlite.connect(DB) as db:
+        cur = await db.execute(
+            "SELECT 1 FROM processed_txs WHERE wallet_id=? AND tx_hash=? LIMIT 1",
+            (wallet_id, tx_hash)
+        )
+        return await cur.fetchone() is not None
+
+async def mark_tx_processed(wallet_id: int, tx_hash: str):
+    """Mark transaction as processed"""
+    async with aiosqlite.connect(DB) as db:
+        try:
+            await db.execute(
+                "INSERT OR IGNORE INTO processed_txs(wallet_id, tx_hash) VALUES(?,?)",
+                (wallet_id, tx_hash)
+            )
+            await db.commit()
+        except Exception as e:
+            logger.error(f"Error marking tx as processed: {e}")
 
 async def add_wallet(user_id: int, network: str, address: str, label: str, last_tx: str = ""):
     async with aiosqlite.connect(DB) as db:
