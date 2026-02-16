@@ -1337,6 +1337,9 @@ async def check_single_wallet(wallet_row):
             logger.info(f"🔔 Found {len(new_txs)} new tx(s) for wallet {wallet_id} ({label}) on {display}")
             
             for tx_hash, coin, amount in reversed(new_txs):
+                if await is_tx_processed(wallet_id, tx_hash):
+                    logger.info(f"⏭️ Skipping already processed tx: {short(tx_hash)}")
+                    continue
                 try:
                     price = await get_price_usd(coin)
                     usd = round(amount * price, 2) if price else 0
