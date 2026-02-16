@@ -1364,6 +1364,8 @@ async def check_single_wallet(wallet_row):
                     
                     await bot.send_message(user_id, msg)
                     logger.info(f"✅ Alert sent to user {user_id}: {amount_str} {coin}")
+
+                    await mark_tx_processed(wallet_id, tx_hash)
                     
                     # ✨ DELAY BETWEEN NOTIFICATIONS
                     await asyncio.sleep(1)
