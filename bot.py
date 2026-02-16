@@ -1255,6 +1255,9 @@ async def check_single_wallet(wallet_row):
     wallet_id, user_id, net_key, address, label, last_tx, _ = wallet_row
     
     try:
+        # ✨ ADD SMALL DELAY BETWEEN WALLET CHECKS
+        await asyncio.sleep(0.5)
+        
         if net_key == "tron":
             new_txs = await check_tron(address, last_tx)
         elif net_key == "ton":
@@ -1297,18 +1300,19 @@ async def check_single_wallet(wallet_row):
                     await bot.send_message(user_id, msg)
                     logger.info(f"✅ Alert sent to user {user_id}: {amount_str} {coin}")
                     
-                    await asyncio.sleep(0.5)
+                    # ✨ DELAY BETWEEN NOTIFICATIONS
+                    await asyncio.sleep(1)
                 
                 except Exception as e:
                     logger.error(f"Error sending notification: {e}")
             
+            # ✨ UPDATE WITH MOST RECENT TX (FIRST IN LIST)
             latest_tx_hash = new_txs[0][0]
             await update_last_tx(wallet_id, latest_tx_hash)
-            logger.info(f"💾 Updated last_tx for wallet {wallet_id}")
+            logger.info(f"💾 Updated last_tx for wallet {wallet_id} to {short(latest_tx_hash)}")
     
     except Exception as e:
         logger.error(f"Error checking wallet {wallet_id} ({net_key}/{label}): {e}")
-
 async def monitor_loop():
     await asyncio.sleep(10)
     logger.info("🔄 Multi-chain monitor started")
